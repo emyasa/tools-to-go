@@ -3,11 +3,11 @@ package tracer
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"runtime"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
 )
 
@@ -46,12 +46,13 @@ func (s *Span) End() {
 
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
+	allocBytes := humanize.Bytes(m.TotalAlloc - s.startAlloc)
 
-	log.Printf("trace=%s span=%s duration=%s alloc_bytes=%d",
+	log.Printf("trace=%s span=%s duration=%s alloc_bytes=%s",
 		s.traceID,
 		s.name,
 		elapsed,
-		m.TotalAlloc - s.startAlloc)
+		allocBytes)
 }
 
 type spanKeyType struct {}
@@ -64,22 +65,4 @@ func extractParentSpan(ctx context.Context) *Span {
 	}
 
 	return val.(*Span)
-}
-
-func formatBytes(b uint64) string {
-	const unit = 1024
-
-	if b < unit {
-		return fmt.Sprintf("%d B", b)
-	}
-
-	div, exp := uint64(unit), 0
-	for n := b / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.2f %ciB",
-		float64(b)/float64(div),
-		"KMGTPE"[exp],
-	)
 }
