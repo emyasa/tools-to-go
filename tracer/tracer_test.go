@@ -69,6 +69,10 @@ func TestSpan_End_Logs(t *testing.T) {
 	}
 
 	if !strings.Contains(out, "duration=") {
-		t.Error("missing duration")
+		t.Error("missing duration in log")
+	}
+
+	if !strings.Contains(out, "alloc_bytes") {
+		t.Error("missing alloc bytes in log")
 	}
 }

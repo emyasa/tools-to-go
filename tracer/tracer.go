@@ -4,6 +4,7 @@ package tracer
 import (
 	"context"
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ type Span struct {
 	traceID string
 	name string
 	start time.Time
+	startAlloc uint64
 }
 
 func Start(ctx context.Context, name string) (context.Context, *Span) {
@@ -23,10 +25,14 @@ func Start(ctx context.Context, name string) (context.Context, *Span) {
 		traceID = parent.traceID
 	}
 
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
 	span := &Span{
 		traceID: traceID,
 		name: name,
 		start: time.Now(),
+		startAlloc: m.TotalAlloc,
 	}
 
 	ctx = context.WithValue(ctx, spanKey, span)
@@ -37,10 +43,14 @@ func Start(ctx context.Context, name string) (context.Context, *Span) {
 func (s *Span) End() {
 	elapsed := time.Since(s.start)
 
-	log.Printf("trace=%s span=%s duration=%s",
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	log.Printf("trace=%s span=%s duration=%s alloc_bytes=%d",
 		s.traceID,
 		s.name,
-		elapsed)
+		elapsed,
+		m.TotalAlloc - s.startAlloc)
 }
 
 type spanKeyType struct {}
