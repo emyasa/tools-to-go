@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emyasa/tools-to-go/realtime-config/client-sdk/internal/runtimeconfig"
+	"github.com/emyasa/tools-to-go/realtime-config/client-sdk/runtimeconfig"
 	"github.com/redis/go-redis/v9"
 	"gopkg.in/yaml.v3"
 )
