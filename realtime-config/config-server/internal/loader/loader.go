@@ -1,16 +1,20 @@
 package loader
 
 import (
+	"context"
 	"io/fs"
 	"os"
 	"path/filepath"
 
+	"github.com/emyasa/tools-to-go/realtime-config/config-server/internal/redis"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
 func LoadConfigFromGit() {
+	rdb := redis.New("localhost:6379")
+
 	auth, _ := ssh.NewPublicKeysFromFile("git", "/Users/emyasa/.ssh/id_ed25519", "")
 	repoURL := "git@github.com:emyasa/scratch-config"
 	branch := "main"
@@ -18,10 +22,7 @@ func LoadConfigFromGit() {
 
 	syncRepo(auth, repoURL, branch, targetPath)
 	files := loadRepoFiles(targetPath)
-
-	for key, _ := range files {
-		println(key)
-	}
+	redis.LoadMapAsKeys(context.Background(), rdb, "config-server", files)
 }
 
 func syncRepo(auth *ssh.PublicKeys, repoURL string, branch string, targetPath string) {
@@ -47,8 +48,8 @@ func syncRepo(auth *ssh.PublicKeys, repoURL string, branch string, targetPath st
 	}
 }
 
-func loadRepoFiles(targetPath string) (map[string][]byte) {
-	files := make(map[string][]byte)
+func loadRepoFiles(targetPath string) (map[string]string) {
+	files := make(map[string]string)
 	ignorePatterns := []string{".*"}
 
 	matchesIgnore := func(name string) bool {
@@ -90,7 +91,7 @@ func loadRepoFiles(targetPath string) (map[string][]byte) {
 			return err
 		}
 
-		files[relPath] = data
+		files[relPath] = string(data)
 		return nil
 	})
 
