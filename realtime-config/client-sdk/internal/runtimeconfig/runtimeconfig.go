@@ -52,6 +52,10 @@ func (s *Store[T]) watch(
 	}
 }
 
+func (s *Store[T]) Get() (*T) {
+	return s.current.Load()
+}
+
 func Watch[T any](
 	ctx context.Context,
 	options Options,
