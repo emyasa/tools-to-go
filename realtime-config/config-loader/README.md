@@ -9,3 +9,5 @@
 redis-cli -h localhost -p 6379
 KEYS config-server:*
 ```
+[] Keeps track of commits
+- on every repo sync
