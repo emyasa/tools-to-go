@@ -16,7 +16,7 @@ func LoadMapAsKeys(ctx context.Context, rdb *redis.Client, prefix string, data m
 	pipe := rdb.Pipeline()
 
 	for k, v := range data {
-		pipe.Set(ctx, prefix+":"+k, v, 0)
+		pipe.Set(ctx, prefix+k, v, 0)
 	}
 
 	_, err := pipe.Exec(ctx)
