@@ -8,6 +8,29 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+type RedisOptions struct {
+	client *redis.Client
+	channel string
+}
+
+func NewRedisOptions(
+	client *redis.Client,
+	channel string,
+) (*RedisOptions, error) {
+	if client == nil {
+		return nil, errors.New("client is required")
+	}
+
+	if channel == "" {
+		return nil, errors.New("channel is required")
+	}
+
+	return &RedisOptions{
+		client: client,
+		channel: channel,
+	}, nil
+}
+
 type Loader[T any] func(context.Context, *redis.Client) (*T, error)
 
 type Store[T any] struct {
@@ -34,29 +57,6 @@ func (s *Store[T]) watch(
 
 func (s *Store[T]) Get() (*T) {
 	return s.current.Load()
-}
-
-type RedisOptions struct {
-	client *redis.Client
-	channel string
-}
-
-func NewRedisOptions(
-	client *redis.Client,
-	channel string,
-) (*RedisOptions, error) {
-	if client == nil {
-		return nil, errors.New("client is required")
-	}
-
-	if channel == "" {
-		return nil, errors.New("channel is required")
-	}
-
-	return &RedisOptions{
-		client: client,
-		channel: channel,
-	}, nil
 }
 
 func Watch[T any](
