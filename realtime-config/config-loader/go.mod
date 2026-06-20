@@ -1,4 +1,4 @@
-module github.com/emyasa/tools-to-go/realtime-config/config-server
+module github.com/emyasa/tools-to-go/realtime-config/config-loader
 
 go 1.26.4
 
