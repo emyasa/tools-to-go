@@ -13,14 +13,14 @@ Realtime-config aims to aid in achieving a familiar way of managing non-sensitiv
 
 ## Usage
 
-### 1. config-loader - push config from Git to Redis
+### 1. config-loader - push config from Git to Redis (see loader_test.go)
 ```go
 gitOpts, _ := loader.NewGitOptions("/path/to/id_ed25519", "git@github.com:user/config-repo", "main")
 redisOpts, _ := loader.NewRedisOptions(rdb, "prefix/", []string{"target-client-channel"})
 loader.LoadFromGit(context.Background(), gitOpts, redisOpts)
 ```
 
-### 2. client-sdk - watch for changes in your app (see examples/)
+### 2. client-sdk - watch for changes in your app (see examples/client/main.go)
 ```go
 type Config struct {
     ...
