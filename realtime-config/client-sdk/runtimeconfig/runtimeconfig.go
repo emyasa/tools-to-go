@@ -2,30 +2,11 @@ package runtimeconfig
 
 import (
 	"context"
+	"errors"
 	"sync/atomic"
 
 	"github.com/redis/go-redis/v9"
 )
-
-type Options struct {
-	RedisAddr string
-	Channel string
-}
-
-func NewOptions(redisAddr, channel string) Options {
-	if redisAddr == "" {
-		panic("redisAddr is required")
-	}
-
-	if channel == "" {
-		panic("channel is required")
-	}
-
-	return Options{
-		RedisAddr: redisAddr,
-		Channel: channel,
-	}
-}
 
 type Loader[T any] func(context.Context, *redis.Client) (*T, error)
 
@@ -36,14 +17,13 @@ type Store[T any] struct {
 
 func (s *Store[T]) watch(
 	ctx context.Context,
-	rdb *redis.Client,
-	channel string,
+	redisOptions *RedisOptions,
 ) {
-	sub := rdb.Subscribe(ctx, channel)
+	sub := redisOptions.client.Subscribe(ctx, redisOptions.channel)
 	defer sub.Close()
 
 	for range sub.Channel() {
-		cfg, err := s.loader(ctx, rdb)
+		cfg, err := s.loader(ctx, redisOptions.client)
 		if err != nil {
 			continue
 		}
@@ -56,16 +36,36 @@ func (s *Store[T]) Get() (*T) {
 	return s.current.Load()
 }
 
+type RedisOptions struct {
+	client *redis.Client
+	channel string
+}
+
+func NewRedisOptions(
+	client *redis.Client,
+	channel string,
+) (*RedisOptions, error) {
+	if client == nil {
+		return nil, errors.New("client is required")
+	}
+
+	if channel == "" {
+		return nil, errors.New("channel is required")
+	}
+
+	return &RedisOptions{
+		client: client,
+		channel: channel,
+	}, nil
+}
+
 func Watch[T any](
 	ctx context.Context,
-	options Options,
+	redisOptions *RedisOptions,
 	loader Loader[T],
 ) (*Store[T], error) {
-	rdb := redis.NewClient(&redis.Options{
-		Addr: options.RedisAddr,
-	})
 
-	cfg, err := loader(ctx, rdb)
+	cfg, err := loader(ctx, redisOptions.client)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func Watch[T any](
 	}
 
 	s.current.Store(cfg)
-	go s.watch(ctx, rdb, options.Channel)
+	go s.watch(ctx, redisOptions)
 
 	return s, nil
 }

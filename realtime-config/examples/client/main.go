@@ -29,7 +29,15 @@ func load(ctx context.Context, rdb *redis.Client) (*Config, error) {
 
 func main() {
 	ctx := context.Background()
-	opts := runtimeconfig.NewOptions("localhost:6379", "general")
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	opts, err := runtimeconfig.NewRedisOptions(rdb, "general")
+	if err != nil {
+		panic(err)
+	}
+
 	cfg, err := runtimeconfig.Watch(ctx, opts, load)
 	if err != nil {
 		panic(err)
