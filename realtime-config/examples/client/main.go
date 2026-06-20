@@ -10,18 +10,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type NewServiceConfig struct {
+	Template string `yaml:"template"`
+}
+
 type GeneralConfig struct {
-	Sample string `yaml:"sample"`
+	Key string `yaml:"key"`
 }
 
 type Config struct {
+	NewService NewServiceConfig
 	General GeneralConfig
 }
 
 func load(ctx context.Context, rdb *redis.Client) (*Config, error) {
+	newService, _ := rdb.Get(ctx, "new-service/config.yaml").Result()
 	general, _ := rdb.Get(ctx, "general.yaml").Result()
 
 	var cfg Config
+	yaml.Unmarshal([]byte(newService), &cfg.NewService)
 	yaml.Unmarshal([]byte(general), &cfg.General)
 
 	return &cfg, nil
@@ -33,19 +40,18 @@ func main() {
 		Addr: "localhost:6379",
 	})
 
-	opts, err := runtimeconfig.NewRedisOptions(rdb, "general")
+	opts, err := runtimeconfig.NewRedisOptions(rdb, "client-example")
 	if err != nil {
 		panic(err)
 	}
 
-	cfg, err := runtimeconfig.Watch(ctx, opts, load)
+	store, err := runtimeconfig.Watch(ctx, opts, load)
 	if err != nil {
 		panic(err)
 	}
 
 	http.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
-		general := cfg.Get().General
-		fmt.Printf("%+v\n", general)
+		fmt.Printf("currentConfig: %+v\n", store.Get())
 	})
 
 	fmt.Println("Listening on port: 8080")

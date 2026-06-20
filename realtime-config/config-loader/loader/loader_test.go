@@ -22,7 +22,11 @@ func TestLoadConfigFromGit(t *testing.T) {
 		Addr: "localhost:6379",
 	})
 
-	redisOptions, err := NewRedisOptions(rdb, "", []string{"general"})
+	redisOptions, err := NewRedisOptions(
+		rdb,
+		"",
+		[]string{"client-example"},
+	)
 
 	if err != nil {
 		panic(err)
