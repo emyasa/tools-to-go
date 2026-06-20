@@ -64,6 +64,9 @@ func Watch[T any](
 	redisOptions *RedisOptions,
 	loader Loader[T],
 ) (*Store[T], error) {
+	if redisOptions == nil {
+		return nil, errors.New("redisOptions is required")
+	}
 
 	cfg, err := loader(ctx, redisOptions.client)
 	if err != nil {
