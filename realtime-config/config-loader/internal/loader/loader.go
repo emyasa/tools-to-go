@@ -17,16 +17,19 @@ func LoadFromGit(
 	repoURL string,
 	branch string,
 	redisAddr string,
+	channels ...string,
 ) {
 	auth, _ := ssh.NewPublicKeysFromFile("git", pemFilePath, "")
 	repoDir := "/tmp/realtime-config/config-loader/" + branch + "/"
 	ensureRepo(auth, repoURL, branch, repoDir)
 
-	entries := readRepoFiles(repoDir)
-
 	rdb := redis.New(redisAddr)
+	entries := readRepoFiles(repoDir)
 	redis.SetEntries(context.Background(), rdb, "", entries)
-	rdb.Publish(context.Background(), "general", "")
+
+	for _, ch := range channels {
+		rdb.Publish(context.Background(), ch, "")
+	}
 }
 
 func ensureRepo(auth *ssh.PublicKeys, repoURL string, branch string, repoDir string) {

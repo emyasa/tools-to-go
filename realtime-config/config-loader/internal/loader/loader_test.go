@@ -8,5 +8,6 @@ func TestLoadConfigFromGit(t *testing.T) {
 		"git@github.com:emyasa/scratch-config",
 		"main",
 		"localhost:6379",
+		"general",
 	)
 }
