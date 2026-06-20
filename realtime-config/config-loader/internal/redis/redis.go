@@ -12,7 +12,7 @@ func New(addr string) *redis.Client {
 	})
 }
 
-func LoadMapAsKeys(ctx context.Context, rdb *redis.Client, prefix string, data map[string]string) error {
+func SetEntries(ctx context.Context, rdb *redis.Client, prefix string, data map[string]string) error {
 	pipe := rdb.Pipeline()
 
 	for k, v := range data {

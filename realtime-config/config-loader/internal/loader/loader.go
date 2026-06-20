@@ -22,7 +22,7 @@ func LoadConfigFromGit() {
 
 	syncRepo(auth, repoURL, branch, targetPath)
 	files := loadRepoFiles(targetPath)
-	redis.LoadMapAsKeys(context.Background(), rdb, "", files)
+	redis.SetEntries(context.Background(), rdb, "", files)
 	rdb.Publish(context.Background(), "general", "")
 }
 
