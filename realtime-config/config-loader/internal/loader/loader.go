@@ -12,16 +12,19 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
-func LoadConfigFromGit() {
-	rdb := redis.New("localhost:6379")
+func LoadFromGit(
+	pemFilePath string,
+	repoURL string,
+	branch string,
+	redisAddr string,
+) {
+	auth, _ := ssh.NewPublicKeysFromFile("git", pemFilePath, "")
+	repoDir := "/tmp/realtime-config/config-loader/" + branch + "/"
+	ensureRepo(auth, repoURL, branch, repoDir)
 
-	auth, _ := ssh.NewPublicKeysFromFile("git", "/Users/emyasa/.ssh/id_ed25519", "")
-	repoURL := "git@github.com:emyasa/scratch-config"
-	branch := "main"
-	targetPath := "/tmp/config"
+	entries := readRepoFiles(repoDir)
 
-	ensureRepo(auth, repoURL, branch, targetPath)
-	entries := readRepoFiles(targetPath)
+	rdb := redis.New(redisAddr)
 	redis.SetEntries(context.Background(), rdb, "", entries)
 	rdb.Publish(context.Background(), "general", "")
 }

@@ -3,5 +3,10 @@ package loader
 import "testing"
 
 func TestLoadConfigFromGit(t *testing.T) {
-	LoadConfigFromGit()
+	LoadFromGit(
+		"/Users/emyasa/.ssh/id_ed25519",
+		"git@github.com:emyasa/scratch-config",
+		"main",
+		"localhost:6379",
+	)
 }
