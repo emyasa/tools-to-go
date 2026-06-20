@@ -27,8 +27,8 @@ type Config struct {
 }
 
 func load(ctx context.Context, rdb *redis.Client) (*Config, error) {
-	newService, _ := rdb.Get(ctx, "new-service/config.yaml").Result()
-	general, _ := rdb.Get(ctx, "general.yaml").Result()
+	newService, _ := rdb.Get(ctx, "prefix/new-service/config.yaml").Result()
+	general, _ := rdb.Get(ctx, "prefix/general.yaml").Result()
 
 	var cfg Config
 	yaml.Unmarshal([]byte(newService), &cfg.NewService)
