@@ -20,21 +20,21 @@ func LoadConfigFromGit() {
 	branch := "main"
 	targetPath := "/tmp/config"
 
-	syncRepo(auth, repoURL, branch, targetPath)
-	files := loadRepoFiles(targetPath)
-	redis.SetEntries(context.Background(), rdb, "", files)
+	ensureRepo(auth, repoURL, branch, targetPath)
+	entries := readRepoFiles(targetPath)
+	redis.SetEntries(context.Background(), rdb, "", entries)
 	rdb.Publish(context.Background(), "general", "")
 }
 
-func syncRepo(auth *ssh.PublicKeys, repoURL string, branch string, targetPath string) {
-	_, err := git.PlainClone(targetPath, false, &git.CloneOptions{
+func ensureRepo(auth *ssh.PublicKeys, repoURL string, branch string, repoDir string) {
+	_, err := git.PlainClone(repoDir, false, &git.CloneOptions{
 		URL: repoURL,
 		Auth: auth,
 		ReferenceName: plumbing.NewBranchReferenceName(branch),
 	})
 
 	if err == git.ErrRepositoryAlreadyExists {
-		r, _ := git.PlainOpen(targetPath)
+		r, _ := git.PlainOpen(repoDir)
 		w, _ := r.Worktree()
 		w.Pull(&git.PullOptions{
 			Auth: auth,
@@ -49,7 +49,7 @@ func syncRepo(auth *ssh.PublicKeys, repoURL string, branch string, targetPath st
 	}
 }
 
-func loadRepoFiles(targetPath string) (map[string]string) {
+func readRepoFiles(targetPath string) (map[string]string) {
 	files := make(map[string]string)
 	ignorePatterns := []string{".*"}
 
