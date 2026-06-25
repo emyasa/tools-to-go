@@ -39,6 +39,7 @@ func main() {
 	rdb := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
+	defer rdb.Close()
 
 	opts, err := runtimeconfig.NewRedisOptions(rdb, "client-example")
 	if err != nil {
