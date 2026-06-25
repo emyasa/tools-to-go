@@ -86,7 +86,10 @@ func LoadFromGit(
 	ensureRepo(auth, gitOptions.repoURL, gitOptions.branch, repoDir)
 
 	entries := readRepoFiles(repoDir)
-	setEntries(ctx, redisOptions.client, redisOptions.prefixKey, entries)
+	err := setEntries(ctx, redisOptions.client, redisOptions.prefixKey, entries)
+	if err != nil {
+		panic(err)
+	}
 
 	for _, ch := range redisOptions.channels {
 		redisOptions.client.Publish(context.Background(), ch, "")
@@ -103,12 +106,14 @@ func ensureRepo(auth *ssh.PublicKeys, repoURL string, branch string, repoDir str
 	if err == git.ErrRepositoryAlreadyExists {
 		r, _ := git.PlainOpen(repoDir)
 		w, _ := r.Worktree()
-		w.Pull(&git.PullOptions{
+		err = w.Pull(&git.PullOptions{
 			Auth: auth,
 			ReferenceName: plumbing.NewBranchReferenceName(branch),
 		})
 
-		return
+		if err == git.NoErrAlreadyUpToDate {
+			return
+		}
 	}
 
 	if err != nil {
